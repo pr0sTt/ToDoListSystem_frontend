@@ -64,10 +64,8 @@ export function Board() {
       if (editingTask) {
           const updatedTask: ToDoItemDto = {
             ...editingTask,
-            title: taskData.title || editingTask.title,
-            description: taskData.description ?? editingTask.description,
+            ...taskData,
             status: taskData.status || editingTask.status,
-            deadline: taskData.deadline ?? editingTask.deadline,
           };
         await todoService.update(editingTask.id, updatedTask); 
         dispatch(updateTask(updatedTask));

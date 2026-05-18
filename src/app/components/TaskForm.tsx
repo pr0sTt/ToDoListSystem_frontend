@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Task, TaskStatus } from '../../types';
+import { ToDoItemDto, TaskStatus } from '../types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/Dialog';
 interface TaskFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (task: Partial<Task>) => void;
-  initialData?: Task;
+  onSubmit: (task: Partial<ToDoItemDto>) => void;
+  initialData?: ToDoItemDto;
   defaultStatus?: TaskStatus;
 }
 
@@ -80,12 +80,11 @@ export function TaskForm({ open, onOpenChange, onSubmit, initialData, defaultSta
               <label className="text-sm font-medium">Статус</label>
               <select 
                 className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={status}
-                onChange={e => setStatus(e.target.value as TaskStatus)}
-              >
-                <option value="todo">До виконання (ToDo)</option>
-                <option value="in-progress">В процесі (In Progress)</option>
-                <option value="done">Виконано (Done)</option>
+                  value={status}
+                  onChange={e => setStatus(e.target.value as TaskStatus)}>
+                <option value="todo">До виконання</option>
+                <option value="inprogress">В процесі</option> {/* Прибрали дефіс */}
+                <option value="done">Виконано</option>
               </select>
             </div>
             
