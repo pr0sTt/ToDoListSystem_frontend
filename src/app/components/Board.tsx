@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { ToDoItemDto, TaskStatus } from '../types';
 import { TaskCard } from './TaskCard';
 import { TaskForm } from './TaskForm';
 import { Button } from './ui/Button';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { addTask, updateTask, deleteTask } from '../features/tasks/tasksSlice';
+import { addTask, updateTask, deleteTask, setTasks } from '../features/tasks/tasksSlice'; // Додай setTasks у свій slice
+import { todoService } from '../../api/todoService';
 
 export function Board() {
   const tasks = useAppSelector((state) => state.tasks.tasks);
@@ -14,9 +15,23 @@ export function Board() {
   const [editingTask, setEditingTask] = useState<ToDoItemDto | undefined>(undefined);
   const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('todo');
 
+  // 1. Завантаження даних з бекенду при старті
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const data = await todoService.getAll();
+        dispatch(setTasks(data));
+      } catch (error) {
+        console.error("Не вдалося завантажити завдання:", error);
+      }
+    };
+
+    fetchTasks();
+  }, [dispatch]);
+
   const columns: { id: TaskStatus; title: string; color: string }[] = [
     { id: 'todo', title: 'До виконання', color: 'bg-slate-100' },
-    { id: 'in-progress', title: 'В процесі', color: 'bg-blue-50' },
+    { id: 'inprogress', title: 'В процесі', color: 'bg-blue-50' },
     { id: 'done', title: 'Виконано', color: 'bg-green-50' },
   ];
 
@@ -31,24 +46,51 @@ export function Board() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteTask = (id: string) => {
+  // 2. Видалення з бекенду
+  const handleDeleteTask = async (id: string) => {
     if (confirm('Ви впевнені, що хочете видалити це завдання?')) {
-      dispatch(deleteTask(id));
+      try {
+        await todoService.delete(id);
+        dispatch(deleteTask(id));
+      } catch (error) {
+        alert("Помилка при видаленні");
+      }
     }
   };
 
-  const handleFormSubmit = (taskData: Partial<ToDoItemDto>) => {
-    if (editingTask) {
-      dispatch(updateTask({ ...editingTask, ...taskData } as ToDoItemDto));
-    } else {
-      const newTask: ToDoItemDto = {
-        id: Math.random().toString(36).substring(2, 9),
-        title: taskData.title!,
-        description: taskData.description,
-        status: taskData.status || 'todo',
-        deadline: taskData.deadline,
-      };
-      dispatch(addTask(newTask));
+  // 3. Створення або оновлення на бекенді
+  const handleFormSubmit = async (taskData: Partial<ToDoItemDto>) => {
+    try {
+      if (editingTask) {
+          const updatedTask: ToDoItemDto = {
+            ...editingTask,
+            title: taskData.title || editingTask.title,
+            description: taskData.description ?? editingTask.description,
+            status: taskData.status || editingTask.status,
+            deadline: taskData.deadline ?? editingTask.deadline,
+          };
+        await todoService.update(editingTask.id, updatedTask); 
+        dispatch(updateTask(updatedTask));
+      } else {
+        // Створення
+        const command = {
+          title: taskData.title!,
+          description: taskData.description,
+          deadline: taskData.deadline,
+          status: taskData.status || 'todo'
+        };
+        
+        const newId = await todoService.create(command); // Бекенд повертає Guid
+        
+        const newTask: ToDoItemDto = {
+          id: newId,
+          ...command
+        };
+        dispatch(addTask(newTask));
+      }
+      setIsFormOpen(false);
+    } catch (error) {
+      alert("Помилка при збереженні");
     }
   };
 
@@ -57,7 +99,7 @@ export function Board() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Мої завдання</h1>
-          <p className="text-sm text-gray-500">Управляйте своїми планами та слідкуйте за дедлайнами.</p>
+          <p className="text-sm text-gray-500">Управляйте своїми планами через Docker API.</p>
         </div>
         <Button onClick={() => handleCreateTask('todo')}>
           <Plus className="mr-2 h-4 w-4" />
@@ -67,7 +109,13 @@ export function Board() {
 
       <div className="grid flex-1 grid-cols-1 gap-6 md:grid-cols-3">
         {columns.map(column => {
-          const columnTasks = tasks.filter(t => t.status === column.id);
+          //const columnTasks = tasks.filter(t => t.status === column.id);
+          //const columnTasks = tasks.filter(t => t.status.toLowerCase() === column.id.toLowerCase());
+          const columnTasks = tasks.filter(t => {
+            const normalizedStatus = t.status.replace('-', '').toLowerCase();
+            const normalizedColumnId = column.id.toLowerCase();
+            return normalizedStatus === normalizedColumnId;
+          });
           
           return (
             <div key={column.id} className={`flex flex-col rounded-xl p-4 ${column.color}`}>
@@ -78,13 +126,6 @@ export function Board() {
                     {columnTasks.length}
                   </span>
                 </div>
-                <button 
-                  onClick={() => handleCreateTask(column.id)}
-                  className="rounded-md p-1 text-gray-500 hover:bg-white hover:text-gray-900 hover:shadow-sm"
-                  title="Додати завдання сюди"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
               </div>
 
               <div className="flex flex-1 flex-col gap-3">

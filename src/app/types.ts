@@ -1,10 +1,10 @@
-export type TaskStatus = 'todo' | 'in-progress' | 'done';
+export type TaskStatus = 'todo' | 'inprogress' | 'done';
 
 export interface ToDoItemDto {
   id: string;
   title: string;
   description?: string;
-  status: string;
+  status: TaskStatus;
   deadline?: string;
 }
 

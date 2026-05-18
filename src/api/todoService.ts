@@ -16,6 +16,10 @@ export const todoService = {
     return response.data; // поверне Guid
   },
 
+  update: async (id: string, task: ToDoItemDto) => {
+    await axios.put(`${API_URL}/${id}`, task);
+  },
+
   // Видалити
   delete: async (id: string) => {
     await axios.delete(`${API_URL}/${id}`);
