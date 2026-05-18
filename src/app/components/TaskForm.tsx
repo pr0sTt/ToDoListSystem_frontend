@@ -5,6 +5,7 @@ import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
 import { DatePicker } from './ui/DatePicker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/Dialog';
+import { format } from 'date-fns';
 
 interface TaskFormProps {
   open: boolean;
@@ -44,7 +45,7 @@ export function TaskForm({ open, onOpenChange, onSubmit, initialData, defaultSta
       title,
       description,
       status,
-      deadline: deadline ? deadline.toISOString() : undefined,
+      deadline: deadline ? format(deadline, 'yyyy-MM-dd') : undefined,
     });
     onOpenChange(false);
   };

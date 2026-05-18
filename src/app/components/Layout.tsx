@@ -10,7 +10,7 @@ export function Layout() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
             <CheckSquare className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-gray-900">TaskFlow</span>
+          <span className="text-xl font-bold tracking-tight text-gray-900">ToDo List</span>
         </div>
       </header>
       <main className="flex-1 overflow-auto">

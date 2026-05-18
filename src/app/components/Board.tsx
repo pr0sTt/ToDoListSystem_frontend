@@ -97,7 +97,6 @@ export function Board() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Мої завдання</h1>
-          <p className="text-sm text-gray-500">Управляйте своїми планами через Docker API.</p>
         </div>
         <Button onClick={() => handleCreateTask('todo')}>
           <Plus className="mr-2 h-4 w-4" />
